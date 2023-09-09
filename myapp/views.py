@@ -2,11 +2,13 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 
-from myapp.forms import RegisterForm
+from myapp.forms import RegisterForm, AddCustomerForm
+from myapp.models import Customer
 
 
 # Create your views here.
 def home(request):
+    customers = Customer.objects.all()
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
@@ -18,7 +20,7 @@ def home(request):
         else:
             messages.error(request=request, message="Invalid username or password. Try again.")
             return redirect('home')
-    context = {}
+    context = {'customers': customers}
     return render(request=request, template_name='myapp/home.html', context=context)
 
 
@@ -45,3 +47,52 @@ def register(request):
         return render(request=request, template_name="myapp/register.html", context=context)
     context = {'form': form}
     return render(request=request, template_name='myapp/register.html', context=context)
+
+
+def view_customer(request, pk):
+    if request.user.is_authenticated:
+        customer = Customer.objects.get(pk=pk)
+        context = {'customer': customer}
+        return render(request=request, template_name='myapp/customer.html', context=context)
+    messages.warning(request=request, message="You must be logged in first.")
+    return redirect('home')
+
+
+def add_customer(request):
+    form = AddCustomerForm(request.POST or None)
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            if form.is_valid():
+                record = form.save()
+                messages.warning(request=request, message="Customer added.")
+                return redirect('home')
+        context = {'form': form}
+        return render(request=request, template_name='myapp/add_customer.html', context=context)
+    else:
+        messages.warning(request=request, message="You must be logged in first.")
+        return redirect('home')
+
+
+def update_customer(request, pk):
+    if request.user.is_authenticated:
+        customer = Customer.objects.get(pk=pk)
+        form = AddCustomerForm(request.POST or None, instance=customer)
+        if form.is_valid():
+            form.save()
+            messages.success(request=request, message="Customer updated.")
+            return redirect('home')
+        context = {'form': form}
+        return render(request=request, template_name='myapp/update_customer.html', context=context)
+    messages.warning(request=request, message="You must be logged in first.")
+    return redirect('home')
+
+
+def delete_customer(request, pk):
+    if request.user.is_authenticated:
+        customer = Customer.objects.get(id=pk)
+        customer.delete()
+        messages.success(request, "Customer deleted.")
+        return redirect('home')
+    else:
+        messages.warning(request, "You must be logged in first.")
+        return redirect('home')
