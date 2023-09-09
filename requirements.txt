@@ -1,6 +1,6 @@
-Django
+Django~=4.2.5
 django-jazzmin
 Pillow
 python-decouple
-mysql-connector-python
+mysql-connector-python~=8.1.0
 mysqlclient

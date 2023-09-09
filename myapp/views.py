@@ -43,5 +43,5 @@ def register(request):
         form = RegisterForm()
         context = {"form": form}
         return render(request=request, template_name="myapp/register.html", context=context)
-    context = {}
+    context = {'form': form}
     return render(request=request, template_name='myapp/register.html', context=context)
